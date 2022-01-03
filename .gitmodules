@@ -1,0 +1,3 @@
+[submodule "submodules/skitscript/mapper-test-suite"]
+	path = submodules/skitscript/mapper-test-suite
+	url = https://github.com/skitscript/mapper-test-suite
