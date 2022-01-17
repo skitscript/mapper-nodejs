@@ -16,8 +16,8 @@
   "private": false,
   "license": "MIT",
   "devDependencies": {
-    "@skitscript/parser-nodejs": "0.0.14",
-    "@skitscript/types-nodejs": "0.0.29",
+    "@skitscript/parser-nodejs": "1.0.0",
+    "@skitscript/types-nodejs": "2.0.0",
     "@types/jasmine": "3.10.2",
     "@types/node": "16.11.14",
     "@types/object-hash": "^2.2.1",
@@ -49,10 +49,10 @@
   "types": "index.d.ts",
   "sideEffects": false,
   "peerDependencies": {
-    "@skitscript/types-nodejs": "0.0.29"
+    "@skitscript/types-nodejs": "2.0.0"
   },
   "dependencies": {
-    "@skitscript/interpreter-nodejs": "0.0.4",
+    "@skitscript/interpreter-nodejs": "1.0.1",
     "object-hash": "2.2.0"
   }
 }
