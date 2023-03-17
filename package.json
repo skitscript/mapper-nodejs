@@ -18,7 +18,7 @@
   "devDependencies": {
     "@skitscript/parser-nodejs": "1.0.0",
     "@skitscript/types-nodejs": "2.0.0",
-    "@types/jasmine": "3.10.3",
+    "@types/jasmine": "3.10.7",
     "@types/node": "16.11.20",
     "@types/object-hash": "2.2.1",
     "@typescript-eslint/eslint-plugin": "5.10.0",
