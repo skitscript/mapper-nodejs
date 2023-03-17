@@ -20,7 +20,7 @@
     "@skitscript/types-nodejs": "2.0.0",
     "@types/jasmine": "3.10.3",
     "@types/node": "16.11.20",
-    "@types/object-hash": "2.2.1",
+    "@types/object-hash": "3.0.2",
     "@typescript-eslint/eslint-plugin": "5.10.0",
     "@typescript-eslint/parser": "5.10.0",
     "del-cli": "4.0.1",
@@ -53,6 +53,6 @@
   },
   "dependencies": {
     "@skitscript/interpreter-nodejs": "1.0.1",
-    "object-hash": "2.2.0"
+    "object-hash": "3.0.0"
   }
 }
