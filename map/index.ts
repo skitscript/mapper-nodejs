@@ -1,4 +1,4 @@
-import { resume, start } from "@skitscript/interpreter-nodejs";
+import { resume, start } from '@skitscript/interpreter-nodejs'
 import type {
   InterpreterState,
   InterpreterStateCharacter,
@@ -7,78 +7,78 @@ import type {
   MapStateInteraction,
   MapStateRun,
   ValidDocument,
-  ValidInterpreterState,
-} from "@skitscript/types-nodejs";
-import objectHash = require("object-hash");
+  ValidInterpreterState
+} from '@skitscript/types-nodejs'
+import objectHash = require('object-hash')
 
-type RecursedDismissInterpreterState = {
-  readonly type: `dismiss`;
-  readonly interpreterState: ValidInterpreterState;
-  next?: RecursedInterpreterState;
-};
+interface RecursedDismissInterpreterState {
+  readonly type: 'dismiss'
+  readonly interpreterState: ValidInterpreterState
+  next?: RecursedInterpreterState
+}
 
-type RecursedMenuInterpreterState = {
-  readonly type: `menu`;
-  readonly interpreterState: ValidInterpreterState;
-  readonly options: RecursedInterpreterState[];
-};
+interface RecursedMenuInterpreterState {
+  readonly type: 'menu'
+  readonly interpreterState: ValidInterpreterState
+  readonly options: RecursedInterpreterState[]
+}
 
 type RecursedInterpreterState =
   | RecursedDismissInterpreterState
-  | RecursedMenuInterpreterState;
+  | RecursedMenuInterpreterState
 
-type StateAppearance = {
-  readonly characters: ReadonlyArray<MapStateCharacter>;
-  readonly speakers: ReadonlyArray<string>;
-  readonly background: null | string;
-  readonly line: null | ReadonlyArray<MapStateRun>;
-  readonly options: null | ReadonlyArray<ReadonlyArray<MapStateRun>>;
-};
+interface StateAppearance {
+  readonly characters: readonly MapStateCharacter[]
+  readonly speakers: readonly string[]
+  readonly background: null | string
+  readonly line: null | readonly MapStateRun[]
+  readonly options: null | ReadonlyArray<readonly MapStateRun[]>
+}
 
-type StateAppearanceRecord = {
-  readonly stateAppearance: StateAppearance;
-  readonly recursedInterpreterStates: RecursedInterpreterState[];
-};
+interface StateAppearanceRecord {
+  readonly stateAppearance: StateAppearance
+  readonly recursedInterpreterStates: RecursedInterpreterState[]
+}
 
 const generateMapStateCharacter = (
   interpreterStateCharacter: InterpreterStateCharacter
 ): MapStateCharacter => {
   switch (interpreterStateCharacter.state.type) {
-    case `notPresent`:
-      return { type: `notPresent` };
+    case 'notPresent':
+      return { type: 'notPresent' }
 
-    case `entering`:
+    case 'entering':
       return {
-        type: `entering`,
+        type: 'entering',
         emote: interpreterStateCharacter.emote,
-        animation: interpreterStateCharacter.state.animation,
-      };
+        animation: interpreterStateCharacter.state.animation
+      }
 
-    case `present`:
-      return { type: `present`, emote: interpreterStateCharacter.emote };
+    case 'present':
+      return { type: 'present', emote: interpreterStateCharacter.emote }
 
-    case `exiting`:
+    case 'exiting':
       return {
-        type: `exiting`,
+        type: 'exiting',
         emote: interpreterStateCharacter.emote,
-        animation: interpreterStateCharacter.state.animation,
-      };
+        animation: interpreterStateCharacter.state.animation
+      }
   }
-};
+}
 
 export const map = (document: ValidDocument): Map => {
   // #region Crawl the entire state space of the game.
-  const recursedInterpreterStatesByInterpreterStateHashes: {
-    [interpreterStateHash: string]: RecursedInterpreterState;
-  } = {};
+  const recursedInterpreterStatesByInterpreterStateHashes: Record<string, RecursedInterpreterState> = {}
 
   const recurse = (
     interpreterState: InterpreterState
   ): null | RecursedInterpreterState => {
+    let output: null | RecursedInterpreterState
+
     switch (interpreterState.type) {
-      case `valid`:
+      case 'valid':
         {
-          const hash = objectHash(interpreterState);
+          const hash = objectHash(interpreterState)
 
           if (
             Object.prototype.hasOwnProperty.call(
@@ -86,19 +86,19 @@ export const map = (document: ValidDocument): Map => {
               hash
             )
           ) {
-            return recursedInterpreterStatesByInterpreterStateHashes[
+            output = recursedInterpreterStatesByInterpreterStateHashes[
               hash
-            ] as RecursedMenuInterpreterState;
+            ] as RecursedMenuInterpreterState
           } else {
             switch (interpreterState.interaction.type) {
-              case `dismiss`: {
+              case 'dismiss': {
                 const newRecord: RecursedDismissInterpreterState = {
-                  type: `dismiss`,
-                  interpreterState,
-                };
+                  type: 'dismiss',
+                  interpreterState
+                }
 
                 recursedInterpreterStatesByInterpreterStateHashes[hash] =
-                  newRecord;
+                  newRecord
 
                 const next = recurse(
                   resume(
@@ -106,88 +106,81 @@ export const map = (document: ValidDocument): Map => {
                     interpreterState,
                     interpreterState.interaction.instructionIndex
                   )
-                );
+                )
 
                 if (next === null) {
-                  return null;
+                  output = null
                 } else {
-                  newRecord.next = next;
-                  return newRecord;
+                  newRecord.next = next
+                  output = newRecord
                 }
-              }
+              } break
 
-              case `menu`: {
+              case 'menu': {
                 const newRecord: RecursedMenuInterpreterState = {
-                  type: `menu`,
+                  type: 'menu',
                   interpreterState,
-                  options: [],
-                };
+                  options: []
+                }
 
                 recursedInterpreterStatesByInterpreterStateHashes[hash] =
-                  newRecord;
+                  newRecord
 
                 for (const option of interpreterState.interaction.options) {
                   const next = recurse(
                     resume(document, interpreterState, option.instructionIndex)
-                  );
+                  )
 
                   if (next === null) {
-                    return null;
+                    return null
                   } else {
-                    newRecord.options.push(next);
+                    newRecord.options.push(next)
                   }
                 }
 
-                return newRecord;
+                return newRecord
               }
             }
           }
-        }
-        /* istanbul ignore next */
-        // @ts-expect-error Workaround for ESLint bug; ESLint is unaware that
-        //                  the above CAN'T fall through due to returns, TSC is
-        //                  aware and raises a warning in response.  Structuring
-        //                  the code like this ensures a TSC error if new
-        //                  interaction types are introduced.
-        break;
+        } break
 
-      case `invalid`:
+      case 'invalid':
         switch (interpreterState.error.type) {
-          case `infiniteLoop`:
-            return null;
+          case 'infiniteLoop':
+            output = null
         }
     }
-  };
 
-  const startingRecursedInterpreterState = recurse(start(document));
+    return output
+  }
+
+  const startingRecursedInterpreterState = recurse(start(document))
   // #endregion
 
   if (startingRecursedInterpreterState === null) {
     return {
-      type: `invalid`,
+      type: 'invalid',
       error: {
-        type: `infiniteLoop`,
-      },
-    };
+        type: 'infiniteLoop'
+      }
+    }
   } else {
     // #region Ensure that the starting state is first.
     const recursedInterpreterStates = Object.values(
       recursedInterpreterStatesByInterpreterStateHashes
-    );
+    )
 
     recursedInterpreterStates.splice(
       recursedInterpreterStates.indexOf(startingRecursedInterpreterState),
       1
-    );
+    )
 
-    recursedInterpreterStates.unshift(startingRecursedInterpreterState);
+    recursedInterpreterStates.unshift(startingRecursedInterpreterState)
     // #endregion
 
     // #region Group the crawled states by their appearances; identical-looking
     //         states will be held together.
-    const stateAppearanceRecordsByStateApperanceHashes: {
-      [hash: string]: StateAppearanceRecord;
-    } = {};
+    const stateAppearanceRecordsByStateApperanceHashes: Record<string, StateAppearanceRecord> = {}
 
     for (const recursedInterpreterState of recursedInterpreterStates) {
       const stateAppearance: StateAppearance = {
@@ -200,27 +193,27 @@ export const map = (document: ValidDocument): Map => {
           recursedInterpreterState.interpreterState.line === null
             ? null
             : recursedInterpreterState.interpreterState.line.map((run) => ({
-                bold: run.bold,
-                italic: run.italic,
-                code: run.code,
-                plainText: run.plainText,
-              })),
+              bold: run.bold,
+              italic: run.italic,
+              code: run.code,
+              plainText: run.plainText
+            })),
         options:
           recursedInterpreterState.interpreterState.interaction.type ===
-          `dismiss`
+          'dismiss'
             ? null
             : recursedInterpreterState.interpreterState.interaction.options.map(
-                (option) =>
-                  option.content.map((run) => ({
-                    bold: run.bold,
-                    italic: run.italic,
-                    code: run.code,
-                    plainText: run.plainText,
-                  }))
-              ),
-      };
+              (option) =>
+                option.content.map((run) => ({
+                  bold: run.bold,
+                  italic: run.italic,
+                  code: run.code,
+                  plainText: run.plainText
+                }))
+            )
+      }
 
-      const stateAppearanceHash = objectHash(stateAppearance);
+      const stateAppearanceHash = objectHash(stateAppearance)
 
       if (
         Object.prototype.hasOwnProperty.call(
@@ -232,12 +225,12 @@ export const map = (document: ValidDocument): Map => {
           stateAppearanceRecordsByStateApperanceHashes[
             stateAppearanceHash
           ] as StateAppearanceRecord
-        ).recursedInterpreterStates.push(recursedInterpreterState);
+        ).recursedInterpreterStates.push(recursedInterpreterState)
       } else {
         stateAppearanceRecordsByStateApperanceHashes[stateAppearanceHash] = {
           stateAppearance,
-          recursedInterpreterStates: [recursedInterpreterState],
-        };
+          recursedInterpreterStates: [recursedInterpreterState]
+        }
       }
     }
     // #endregion
@@ -246,34 +239,34 @@ export const map = (document: ValidDocument): Map => {
     //         recursed interpreter state is first.
     const stateAppearanceRecords = Object.values(
       stateAppearanceRecordsByStateApperanceHashes
-    );
+    )
 
     const indexOfStateAppearanceRecordContainingStartingRecursedInterpreterState =
       stateAppearanceRecords.findIndex((stateAppearanceRecord) =>
         stateAppearanceRecord.recursedInterpreterStates.includes(
           startingRecursedInterpreterState
         )
-      );
+      )
     stateAppearanceRecords.unshift(
       stateAppearanceRecords[
         indexOfStateAppearanceRecordContainingStartingRecursedInterpreterState
       ] as StateAppearanceRecord
-    );
+    )
     stateAppearanceRecords.splice(
       indexOfStateAppearanceRecordContainingStartingRecursedInterpreterState +
         1,
       1
-    );
+    )
     // #endregion
 
     // #region Merge visually identical states.  This is an iterative process;
     //         it is possible that long parallel chains of identical states
     //         exist, and each pass will merge at least one set of matching
     //         "links".
-    let thisIterationMadeChanges = true;
+    let thisIterationMadeChanges = true
 
     while (thisIterationMadeChanges) {
-      thisIterationMadeChanges = false;
+      thisIterationMadeChanges = false
 
       for (const stateAppearanceRecord of stateAppearanceRecords) {
         for (
@@ -282,7 +275,7 @@ export const map = (document: ValidDocument): Map => {
           i++
         ) {
           const firstRecursedInterpreterState = stateAppearanceRecord
-            .recursedInterpreterStates[i] as RecursedInterpreterState;
+            .recursedInterpreterStates[i] as RecursedInterpreterState
 
           for (
             let j = i + 1;
@@ -290,15 +283,15 @@ export const map = (document: ValidDocument): Map => {
 
           ) {
             const secondRecursedInterpreterState = stateAppearanceRecord
-              .recursedInterpreterStates[j] as RecursedInterpreterState;
+              .recursedInterpreterStates[j] as RecursedInterpreterState
 
             if (
-              (firstRecursedInterpreterState.type === `dismiss` &&
-                secondRecursedInterpreterState.type === `dismiss` &&
+              (firstRecursedInterpreterState.type === 'dismiss' &&
+                secondRecursedInterpreterState.type === 'dismiss' &&
                 firstRecursedInterpreterState.next ===
                   secondRecursedInterpreterState.next) ||
-              (firstRecursedInterpreterState.type === `menu` &&
-                secondRecursedInterpreterState.type === `menu` &&
+              (firstRecursedInterpreterState.type === 'menu' &&
+                secondRecursedInterpreterState.type === 'menu' &&
                 firstRecursedInterpreterState.options.length ===
                   secondRecursedInterpreterState.options.length &&
                 firstRecursedInterpreterState.options.every(
@@ -307,22 +300,22 @@ export const map = (document: ValidDocument): Map => {
                     secondRecursedInterpreterState.options[optionIndex]
                 ))
             ) {
-              stateAppearanceRecord.recursedInterpreterStates.splice(j, 1);
+              stateAppearanceRecord.recursedInterpreterStates.splice(j, 1)
 
               for (const stateAppearanceRecord of stateAppearanceRecords) {
                 for (const recursedInterpreterState of stateAppearanceRecord.recursedInterpreterStates) {
                   switch (recursedInterpreterState.type) {
-                    case `dismiss`:
+                    case 'dismiss':
                       if (
                         recursedInterpreterState.next ===
                         secondRecursedInterpreterState
                       ) {
                         recursedInterpreterState.next =
-                          firstRecursedInterpreterState;
+                          firstRecursedInterpreterState
                       }
-                      break;
+                      break
 
-                    case `menu`:
+                    case 'menu':
                       for (
                         let optionIndex = 0;
                         optionIndex < recursedInterpreterState.options.length;
@@ -333,50 +326,50 @@ export const map = (document: ValidDocument): Map => {
                           secondRecursedInterpreterState
                         ) {
                           recursedInterpreterState.options[optionIndex] =
-                            firstRecursedInterpreterState;
+                            firstRecursedInterpreterState
                         }
                       }
-                      break;
+                      break
                   }
                 }
               }
 
-              thisIterationMadeChanges = true;
+              thisIterationMadeChanges = true
             } else {
-              j++;
+              j++
             }
           }
         }
       }
     }
-    //#endregion
+    // #endregion
 
     // #region Convert these states to the interchange format and return them.
     const recursedInterpreterStatesInStateOrder =
       stateAppearanceRecords.flatMap(
         (stateAppearanceRecord) =>
           stateAppearanceRecord.recursedInterpreterStates
-      );
+      )
 
     const generateMapStateInteraction = (
       stateAppearanceRecord: StateAppearanceRecord,
       recursedInterpreterState: RecursedInterpreterState
     ): MapStateInteraction => {
       switch (recursedInterpreterState.type) {
-        case `dismiss`:
+        case 'dismiss':
           return {
-            type: `dismiss`,
+            type: 'dismiss',
             stateIndex: recursedInterpreterStatesInStateOrder.indexOf(
               recursedInterpreterState.next as RecursedInterpreterState
-            ),
-          };
+            )
+          }
 
-        case `menu`:
+        case 'menu':
           return {
-            type: `menu`,
+            type: 'menu',
             options: (
               stateAppearanceRecord.stateAppearance.options as ReadonlyArray<
-                ReadonlyArray<MapStateRun>
+              readonly MapStateRun[]
               >
             ).map((content, optionIndex) => ({
               content,
@@ -384,19 +377,19 @@ export const map = (document: ValidDocument): Map => {
                 recursedInterpreterState.options[
                   optionIndex
                 ] as RecursedInterpreterState
-              ),
-            })),
-          };
+              )
+            }))
+          }
       }
-    };
+    }
 
     return {
-      type: `valid`,
+      type: 'valid',
       characters:
         startingRecursedInterpreterState.interpreterState.characters.map(
           (character) => ({
             normalized: character.normalized,
-            verbatim: character.verbatim,
+            verbatim: character.verbatim
           })
         ),
       states: stateAppearanceRecords.flatMap((stateAppearanceRecord) =>
@@ -409,11 +402,11 @@ export const map = (document: ValidDocument): Map => {
             interaction: generateMapStateInteraction(
               stateAppearanceRecord,
               recursedInterpreterState
-            ),
+            )
           })
         )
-      ),
-    };
+      )
+    }
     // #endregion
   }
-};
+}
