@@ -9,7 +9,38 @@ import type {
   ValidDocument,
   ValidInterpreterState
 } from '@skitscript/types-nodejs'
-import objectHash = require('object-hash')
+
+type Hashable = null | boolean | string | HashableArray | HashableObject
+interface HashableArray extends ReadonlyArray<Hashable> {}
+type HashableObject2 = Readonly<Record<string, Hashable>>
+interface HashableObject extends HashableObject2 {}
+
+const hashObject = (obj: Hashable): string => {
+  switch (obj) {
+    case null:
+      return 'null'
+
+    case true:
+      return 'true'
+
+    case false:
+      return 'false'
+
+    default:
+      switch (typeof obj) {
+        case 'number':
+        case 'string':
+          return JSON.stringify(obj)
+
+        case 'object':
+          if (Array.isArray(obj)) {
+            return `[${obj.map(item => hashObject(item)).join(',')}]`
+          } else {
+            return `{${Object.entries(obj).map(entry => `${JSON.stringify(entry[0])}:${hashObject(entry[1])}`).join(',')}}`
+          }
+      }
+  }
+}
 
 interface RecursedDismissInterpreterState {
   readonly type: 'dismiss'
@@ -78,7 +109,7 @@ export const map = (document: ValidDocument): Map => {
     switch (interpreterState.type) {
       case 'valid':
         {
-          const hash = objectHash(interpreterState)
+          const hash = hashObject(interpreterState as unknown as HashableObject)
 
           if (
             Object.prototype.hasOwnProperty.call(
@@ -213,7 +244,7 @@ export const map = (document: ValidDocument): Map => {
             )
       }
 
-      const stateAppearanceHash = objectHash(stateAppearance)
+      const stateAppearanceHash = hashObject(stateAppearance as unknown as HashableObject)
 
       if (
         Object.prototype.hasOwnProperty.call(

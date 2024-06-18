@@ -6,11 +6,12 @@ import type {
 } from '@skitscript/types-nodejs'
 import * as fs from 'fs'
 import * as path from 'path'
-import { map } from '.'
+import * as url from 'url'
+import { map } from './index.js'
 import { parse } from '@skitscript/parser-nodejs'
 
 const casesPath = path.join(
-  __dirname,
+  path.dirname(url.fileURLToPath(import.meta.url)),
   'submodules',
   'skitscript',
   'mapper-test-suite',
