@@ -1,14 +1,9 @@
-import type {
-  Document,
-  Map,
-  MapState,
-  MenuMapStateInteractionOption
-} from '@skitscript/types-nodejs'
 import * as fs from 'fs'
 import * as path from 'path'
 import * as url from 'url'
-import { map } from './index.js'
-import { parse } from '@skitscript/parser-nodejs'
+import { map, type MapState, type MenuMapStateInteractionOption } from './index.js'
+import { parse, type Document } from '@skitscript/parser-nodejs'
+import type { Mapped } from './Mapped/index.js'
 
 const casesPath = path.join(
   path.dirname(url.fileURLToPath(import.meta.url)),
@@ -25,7 +20,7 @@ for (const caseName of caseNames) {
     const casePath = path.join(casesPath, caseName)
 
     let document: Document
-    let actual: Map
+    let actual: Mapped
 
     beforeAll(async () => {
       const source = await fs.promises.readFile(
@@ -61,7 +56,7 @@ for (const caseName of caseNames) {
           'utf8'
         )
 
-        const expected: Map = JSON.parse(expectedText)
+        const expected: Mapped = JSON.parse(expectedText)
 
         if (expected.type === 'valid') {
           const expectedValid = expected

@@ -30,29 +30,13 @@ NPM package:
 npm install --save @skitscript/mapper-nodejs
 ```
 
-Additionally install the types package:
-
-```bash
-npm install --save-dev @skitscript/types-nodejs
-```
-
-### Install `@skitscript/types-nodejs` as a peer dependency
-
-If you are developing a package which includes types from
-`@skitscript/types-nodejs` in its public API, additionally install it as a peer
-dependency so that consumers of your package know to include it as well:
-
-```bash
-npm install --save-peer @skitscript/types-nodejs
-```
-
 ### Install as a development dependency
 
 If this is used when building your application and not at runtime, install it as
 a development dependency:
 
 ```bash
-npm install --save-dev @skitscript/mapper-nodejs @skitscript/types-nodejs
+npm install --save-dev @skitscript/mapper-nodejs
 ```
 
 ## Usage
@@ -76,3 +60,44 @@ console.log(mapResult);
   "states": [...]
 }
 ```
+
+### Types
+
+A comprehensive library of types representing the results of attempting to map
+parsed documents can be imported:
+
+```typescript
+import { Map } from "@skitscript/mapper-nodejs";
+```
+
+#### Maps
+
+- [InvalidMapped](./InvalidMapped/index.ts)
+- [MapCharacter](./MapCharacter/index.ts)
+- [Mapped](./Mapped/index.ts)
+- [MapStateRun](./MapStateRun/index.ts)
+- [ValidMapped](./ValidMapped/index.ts)
+
+#### States
+
+- [MapState](./MapState/index.ts)
+
+##### Characters
+
+- [EnteringMapStateCharacter](./EnteringMapStateCharacter/index.ts)
+- [ExitingMapStateCharacter](./ExitingMapStateCharacter/index.ts)
+- [MapStateCharacter](./MapStateCharacter/index.ts)
+- [NotPresentMapStateCharacter](./NotPresentMapStateCharacter/index.ts)
+- [PresentMapStateCharacter](./PresentMapStateCharacter/index.ts)
+
+##### Interactions
+
+- [DismissMapStateInteraction](./DismissMapStateInteraction/index.ts)
+- [MapStateInteraction](./MapStateInteraction/index.ts)
+- [MenuMapStateInteraction](./MenuMapStateInteraction/index.ts)
+- [MenuMapStateInteractionOption](./MenuMapStateInteractionOption/index.ts)
+
+#### Errors
+
+- [InfiniteLoopMapError](./InfiniteLoopMapError/index.ts)
+- [MapError](./MapError/index.ts)

@@ -16,7 +16,7 @@
   "private": false,
   "license": "MIT",
   "devDependencies": {
-    "@skitscript/parser-nodejs": "^1.0.6",
+    "@skitscript/parser-nodejs": "^2.0.0",
     "@types/jasmine": "^4.6.4",
     "@types/node": "^18.19.36",
     "@typescript-eslint/eslint-plugin": "^5.59.1",
@@ -46,11 +46,8 @@
   ],
   "types": "index.d.ts",
   "sideEffects": false,
-  "peerDependencies": {
-    "@skitscript/types-nodejs": "6.0.1"
-  },
   "dependencies": {
-    "@skitscript/interpreter-nodejs": "^1.0.6"
+    "@skitscript/interpreter-nodejs": "^2.0.0"
   },
   "type": "module"
 }

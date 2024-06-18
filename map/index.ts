@@ -1,14 +1,9 @@
-import { resume, start } from '@skitscript/interpreter-nodejs'
-import type {
-  InterpreterState,
-  InterpreterStateCharacter,
-  Map,
-  MapStateCharacter,
-  MapStateInteraction,
-  MapStateRun,
-  ValidDocument,
-  ValidInterpreterState
-} from '@skitscript/types-nodejs'
+import { resume, start, type InterpreterState, type InterpreterStateCharacter, type ValidInterpreterState } from '@skitscript/interpreter-nodejs'
+import type { MapStateCharacter } from '../MapStateCharacter'
+import type { MapStateRun } from '../MapStateRun'
+import type { ValidDocument } from '@skitscript/parser-nodejs'
+import type { Mapped } from '../Mapped'
+import type { MapStateInteraction } from '../MapStateInteraction'
 
 type Hashable = null | boolean | string | HashableArray | HashableObject
 interface HashableArray extends ReadonlyArray<Hashable> {}
@@ -97,7 +92,7 @@ const generateMapStateCharacter = (
   }
 }
 
-export const map = (document: ValidDocument): Map => {
+export const map = (document: ValidDocument): Mapped => {
   // #region Crawl the entire state space of the game.
   const recursedInterpreterStatesByInterpreterStateHashes: Record<string, RecursedInterpreterState> = {}
 
